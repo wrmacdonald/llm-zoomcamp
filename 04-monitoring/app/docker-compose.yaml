@@ -7,7 +7,7 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.4.3
     environment:
       - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - ES_JAVA_OPTS=-Xms2g -Xmx2g
       - xpack.security.enabled=false
     ports:
       - "${ELASTIC_PORT:-9200}:9200"
@@ -57,11 +57,24 @@ services:
       - MODEL_NAME=${MODEL_NAME}
       - INDEX_NAME=${INDEX_NAME}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+  
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+    depends_on:
+      - postgres
 
 volumes:
   esdata:
   pgdata:
   ollama_data:
+  grafana_data:
 
 networks:
   default:

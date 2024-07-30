@@ -21,7 +21,7 @@ def init_db():
         with conn.cursor() as cur:
             cur.execute("DROP TABLE IF EXISTS feedback")
             cur.execute("DROP TABLE IF EXISTS conversations")
-
+            
             cur.execute("""
                 CREATE TABLE conversations (
                     id TEXT PRIMARY KEY,
@@ -54,59 +54,40 @@ def init_db():
     finally:
         conn.close()
 
-def save_conversation(conversation_id, question, answer_data, course, timestamp=None):
-    if timestamp is None:
-        timestamp = datetime.now(tz)
-    
+def save_conversation(conversation_id, question, answer_data, course, timestamp):
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
-            cur.execute(
-                """
+            cur.execute("""
                 INSERT INTO conversations 
                 (id, question, answer, course, model_used, response_time, relevance, 
                 relevance_explanation, prompt_tokens, completion_tokens, total_tokens, 
                 eval_prompt_tokens, eval_completion_tokens, eval_total_tokens, openai_cost, timestamp)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, COALESCE(%s, CURRENT_TIMESTAMP))
-            """,
-                (
-                    conversation_id,
-                    question,
-                    answer_data["answer"],
-                    course,
-                    answer_data["model_used"],
-                    answer_data["response_time"],
-                    answer_data["relevance"],
-                    answer_data["relevance_explanation"],
-                    answer_data["prompt_tokens"],
-                    answer_data["completion_tokens"],
-                    answer_data["total_tokens"],
-                    answer_data["eval_prompt_tokens"],
-                    answer_data["eval_completion_tokens"],
-                    answer_data["eval_total_tokens"],
-                    answer_data["openai_cost"],
-                    timestamp,
-                ),
-            )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                conversation_id, question, answer_data['answer'], course, 
+                answer_data['model_used'], answer_data['response_time'], 
+                answer_data['relevance'], answer_data['relevance_explanation'],
+                answer_data['prompt_tokens'], answer_data['completion_tokens'], 
+                answer_data['total_tokens'], answer_data['eval_prompt_tokens'],
+                answer_data['eval_completion_tokens'], answer_data['eval_total_tokens'],
+                answer_data['openai_cost'], timestamp
+            ))
         conn.commit()
     finally:
         conn.close()
 
-def save_feedback(conversation_id, feedback, timestamp=None):
-    if timestamp is None:
-        timestamp = datetime.now(tz)
-
+def save_feedback(conversation_id, feedback, timestamp):
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO feedback (conversation_id, feedback, timestamp) VALUES (%s, %s, COALESCE(%s, CURRENT_TIMESTAMP))",
-                (conversation_id, feedback, timestamp),
+                "INSERT INTO feedback (conversation_id, feedback, timestamp) VALUES (%s, %s, %s)",
+                (conversation_id, feedback, timestamp)
             )
         conn.commit()
     finally:
         conn.close()
-
 
 def get_recent_conversations(limit=5, relevance=None):
     conn = get_db_connection()
@@ -120,12 +101,11 @@ def get_recent_conversations(limit=5, relevance=None):
             if relevance:
                 query += f" WHERE c.relevance = '{relevance}'"
             query += " ORDER BY c.timestamp DESC LIMIT %s"
-
+            
             cur.execute(query, (limit,))
             return cur.fetchall()
     finally:
         conn.close()
-
 
 def get_feedback_stats():
     conn = get_db_connection()
