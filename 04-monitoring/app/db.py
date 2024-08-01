@@ -54,7 +54,10 @@ def init_db():
     finally:
         conn.close()
 
-def save_conversation(conversation_id, question, answer_data, course, timestamp):
+def save_conversation(conversation_id, question, answer_data, course, timestamp=None):
+    if timestamp is None:
+        timestamp = datetime.now(tz)
+
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
@@ -77,7 +80,10 @@ def save_conversation(conversation_id, question, answer_data, course, timestamp)
     finally:
         conn.close()
 
-def save_feedback(conversation_id, feedback, timestamp):
+def save_feedback(conversation_id, feedback, timestamp=None):
+    if timestamp is None:
+        timestamp = datetime.now(tz)
+
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
