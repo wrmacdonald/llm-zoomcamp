@@ -166,3 +166,4 @@ cython_debug/
 /ollama_files
 /02-open-source/ollama_files
 /04-monitoring/data
+.DS_Store
